@@ -1,6 +1,7 @@
 #Meson port of CMakeLists.txt
 project('openvpn', 'c',
   version: '2.6.0',
+  meson_version: '>=1.8.2',
   default_options: [
     'buildtype=release',
     'warning_level=2',
@@ -21,7 +22,7 @@ build_android = host_machine.system() == 'android' or get_option('fake_android')
 mbed_enabled = get_option('mbed')
 wolfssl_enabled = get_option('wolfssl')
 
-openssl_dep = dependency('openssl', version: '>=1.1.1', required: not mbed_enabled and not wolfssl_enabled)
+openssl_dep = dependency('openssl', version: '>=1.1.1', required: not mbed_enabled and not wolfssl_enabled, method: ['pkg-config', 'cmake'])
 
 mbedtls_dep = dependency('mbedtls', required: mbed_enabled, method: 'pkg-config',
     include_type: 'system',
