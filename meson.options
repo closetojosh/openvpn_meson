@@ -1,13 +1,77 @@
-option('mbed', type: 'boolean', value: false, description: 'Build with mbed TLS')
-option('mbed_include_path', type: 'string', value: '', description: 'Path to mbed TLS include directory')
-option('mbed_library_path', type: 'string', value: '', description: 'Path to mbed TLS library directory')
-option('wolfssl', type: 'boolean', value: false, description: 'Build with wolfSSL')
-option('enable_lz4', type: 'boolean', value: true, description: 'Enable LZ4 compression support')
-option('enable_lzo', type: 'boolean', value: true, description: 'Enable LZO compression support')
-option('enable_pkcs11', type: 'boolean', value: true, description: 'Enable PKCS11 support')
-option('use_werror', type: 'boolean', value: true, description: 'Treat compiler warnings as errors')
-option('fake_android', type: 'boolean', value: false, description: 'Target Android but do not use actual cross compile/Android cmake to build for simple compile checks on Linux')
-option('enable_dns_updown', type: 'boolean', value: true, description: 'Run DNS up/down hook by default')
-option('dns_updown_path', type: 'string', value: '', description: 'Default location for the DNS up/down script')
-option('plugin_dir', type: 'string', value: '', description: 'Location of the plugin directory')
-option('enable_compile_commands', type: 'boolean', value: false, description: 'Generate compile_commands.json') 
+option('mbed', 
+    type: 'boolean', 
+    value: false, 
+    description: 'Build with mbed TLS'
+)
+
+option(
+    'mbed_include_path', 
+    type: 'string', 
+    value: '', description: 'Path to mbed TLS include directory'
+)
+
+option(
+    'mbed_library_path', 
+    type: 'string', 
+    value: '', description: 'Path to mbed TLS library directory'
+)
+
+option(
+    'wolfssl', 
+    type: 'boolean', 
+    value: false, description: 'Build with wolfSSL'
+)
+
+option(
+    'enable_lz4', 
+    type: 'boolean', 
+    value: true, description: 'Enable LZ4 compression support'
+)
+
+option(
+    'enable_lzo', 
+    type: 'boolean', 
+    value: true, description: 'Enable LZO compression support'
+)
+
+option(
+    'enable_pkcs11', 
+    type: 'boolean', 
+    value: true, description: 'Enable PKCS11 support'
+)
+
+option(
+    'use_werror', 
+    type: 'boolean', 
+    value: true, description: 'Treat compiler warnings as errors'
+)
+
+option(
+    'fake_android', 
+    type: 'boolean', 
+    value: false, description: 'Target Android but do not use actual cross compile/Android cmake to build for simple compile checks on Linux'
+)
+
+option(
+    'enable_dns_updown', 
+    type: 'boolean', 
+    value: true, description: 'Run DNS up/down hook by default'
+)
+
+option(
+    'dns_updown_path', 
+    type: 'string', 
+    value: '', description: 'Default location for the DNS up/down script'
+)
+
+option(
+    'plugin_dir', 
+    type: 'string', 
+    value: '', description: 'Location of the plugin directory'
+)
+
+option(
+    'enable_compile_commands', 
+    type: 'boolean', 
+    value: false, description: 'Generate compile_commands.json'
+) 
