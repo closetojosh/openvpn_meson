@@ -1,26 +1,76 @@
 #Meson port of CMakeLists.txt
-project('openvpn', 'c',
-  version: '2.6.0',
-  meson_version: '>=1.8.2',
-  default_options: [
-    'buildtype=release',
-    'warning_level=2',
-    'werror=true'
-  ]
-)
+project('openvpn', 'c', meson_version: '>=1.8.2')
+skip = true
 
-# Build configuration options
-build_windows = host_machine.system() == 'windows'
-build_linux = host_machine.system() == 'linux'
-build_freebsd = host_machine.system() == 'freebsd'
-build_openbsd = host_machine.system() == 'openbsd'
-build_sunos = host_machine.system() == 'sunos'
-build_apple = host_machine.system() == 'darwin'
-build_android = host_machine.system() == 'android' or get_option('fake_android')
+########################
+# policy checks
+########################
+host_sys = host_machine.system()
 
+if not skip# skip 26-32
+    if host_sys != 'windows' and not get_option('unsupported_builds')
+    error('On Unix the supported build is autotools. Pass -Dunsupported_builds=true if you really want Meson/CMake style builds.')
+    endif
+
+    # Guard against mixing autoconf in‑tree builds and Meson out‑of‑tree
+    fs = import('fs')  # Pull in Meson’s file-system helpers
+    if fs.exists(join_paths(meson.project_source_root(), 'config.h'))
+    error('Top-level source dir contains a config.h produced by autoconf – please clean the tree before configuring with Meson.')
+    endif
+endif
+########################
+# User‑configurable options
+########################
 # Dependencies
-mbed_enabled = get_option('mbed')
-wolfssl_enabled = get_option('wolfssl')
+
+mbed = get_option('mbed')
+mbed_include_path = get_option('mbed_include_path')
+mbed_library_path = get_option('mbed_library_path')
+wolfssl = get_option('wolfssl')
+enable_lz4 = get_option('enable_lz4')
+enable_lzo = get_option('enable_lzo')
+enable_pkcs11 = get_option('enable_pkcs11')
+use_werror = get_option('use_werror')
+fake_android = get_option('fake_android')
+enable_dns_updown = get_option('enable_dns_updown')
+dns_updown_path = get_option('dns_updown_path')
+prefix = get_option('prefix')
+if dns_updown_path == ''
+  dns_updown_path = join_paths(prefix, 'libexec', 'openvpn', 'dns-updown')
+endif
+plugin_dir = get_option('plugin_dir')
+if plugin_dir == ''
+  plugin_dir = join_paths(prefix, 'lib', 'openvpn', 'plugins')
+endif
+enable_compile_commands = get_option('enable_compile_commands') 
+
+
+########################
+# Toolchain‑dependent compile / link arguments
+########################
+# skip 50 - 71
+
+
+cc = meson.get_compiler('c')
+#common_c_args   = ['-Wall', '-Wuninitialized']
+#common_link_args = []
+
+message(cc.get_id())
+if cc.get_id() == 'msvc'
+    common_c_args  += ['/MP', '/W2', '/sdl', '/Qspectre', '/guard:cf', '/FC', '/ZH:SHA_256']
+    common_link_args += ['/Brepro']
+    # Release‑only flags reproduced with vs_module_defs in Meson
+    add_languages('cpp', required : false)     # ensures cpp compiler exists for future flags
+endif
+
+
+
+common_c_args = ['-Wall','-Wuninitialized']
+if cc.has_argument('-Wno-stringop-truncation')
+  common_c_args += ['-Wno-stringop-truncation']
+endif
+add_project_arguments(common_c_args, language:'c')
+
 
 openssl_dep = dependency('openssl', version: '>=1.1.1', required: not mbed_enabled and not wolfssl_enabled, method: ['pkg-config', 'cmake'])
 
@@ -40,6 +90,10 @@ pkcs11_dep = dependency('libpkcs11-helper-1', required: get_option('enable_pkcs1
 conf_data = configuration_data()
 conf_data.set('PLUGIN_DIR', get_option('plugin_dir'))
 conf_data.set('ENABLE_DNS_UPDOWN_BY_DEFAULT', get_option('enable_dns_updown'))
+if dns_updown_path == ''
+  dns_updown_path = join_paths(get_option('prefix'), get_option('libexecdir'), 'openvpn', 'dns-updown')
+endif
+
 conf_data.set('DNS_UPDOWN_PATH', get_option('dns_updown_path'))
 
 if build_windows
