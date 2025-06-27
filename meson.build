@@ -152,16 +152,64 @@ if dns_updown_path == ''
 endif
 
 conf_data.set('DNS_UPDOWN_PATH', get_option('dns_updown_path'))
-
+#compilerflags
 if build_windows
-  add_project_arguments('-DWIN32_LEAN_AND_MEAN', language: 'c')
-  add_project_link_arguments('-lws2_32', '-lwinmm', language: 'c')
-  add_project_arguments(
+  # Compile definitions
+  add_project_arguments([
+    '-DWIN32_LEAN_AND_MEAN',
     '-D_CRT_SECURE_NO_WARNINGS',
     '-D_CRT_NONSTDC_NO_DEPRECATE',
-    '-D_WINSOCK_DEPRECATED_NO_WARNINGS',
-    language: 'c'
-  )
+    '-D_WINSOCK_DEPRECATED_NO_WARNINGS'
+  ], language: 'c')
+  
+  # MSVC-specific compile options
+  if cc.get_id() == 'msvc'
+    # Werror handling
+    if get_option('use_werror')
+      add_project_arguments('/WX', language: 'c')
+    endif
+    
+    add_project_arguments([
+      '/MP',          # Multi-processor compilation
+      '/W2',          # Warning level 2
+      '/sdl',         # Enable additional security checks
+      '/Qspectre',    # Spectre mitigation
+      '/guard:cf',    # Control Flow Guard
+      '/FC',          # Full path in diagnostics
+      '/ZH:SHA_256'   # Hash algorithm for file checksums
+    ], language: 'c')
+    
+    # Release-specific compile options
+    if get_option('buildtype') == 'release'
+      add_project_arguments([
+        '/GL',        # Whole Program Optimization
+        '/Oi',        # Generate Intrinsic Functions
+        '/Gy',        # Enable Function-Level Linking
+        '/Zi'         # Generate Debug Information
+      ], language: 'c')
+    endif
+    
+    # Basic link options
+    add_project_link_arguments('/Brepro', language: 'c')
+    
+    # Release-specific link options
+    if get_option('buildtype') == 'release'
+      add_project_link_arguments([
+        '/LTCG:incremental',  # Link Time Code Generation
+        '/DEBUG:FULL',        # Generate full debug info
+        '/OPT:REF',          # Remove unreferenced functions
+        '/OPT:ICF'           # Identical COMDAT Folding
+      ], language: 'c')
+      
+      # Platform-specific release options
+      if host_machine.cpu_family() == 'x86_64' or host_machine.cpu_family() == 'x86'
+        add_project_link_arguments('/CETCOMPAT', language: 'c')
+      endif
+    endif
+  endif
+  
+  # Windows libraries
+  add_project_link_arguments(['-lws2_32', '-lwinmm'], language: 'c')
 endif
 
 if get_option('use_werror')
