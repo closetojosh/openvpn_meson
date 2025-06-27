@@ -89,4 +89,18 @@ option(
     type: 'boolean', 
     value: false, 
     description: 'Generate compile_commands.json'
+)
+
+option(
+    'unsupported_builds', 
+    type: 'boolean', 
+    value: false, 
+    description: 'Allow unsupported builds on non-Windows platforms'
+)
+
+option(
+    'enable_testing', 
+    type: 'boolean', 
+    value: false, 
+    description: 'Enable building unit tests'
 ) 

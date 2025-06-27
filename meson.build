@@ -19,6 +19,16 @@ if not skip# skip 26-32
     endif
 endif
 ########################
+# Build platform variables (temporary, add logic to detect the platform later)
+########################
+build_windows = true
+build_linux = false
+build_freebsd = false
+build_openbsd = false
+build_sunos = false
+build_apple = false
+
+########################
 # User‑configurable options
 ########################
 # Dependencies
@@ -52,10 +62,11 @@ enable_compile_commands = get_option('enable_compile_commands')
 
 
 cc = meson.get_compiler('c')
-#common_c_args   = ['-Wall', '-Wuninitialized']
-#common_link_args = []
+common_c_args   = ['-Wall', '-Wuninitialized']
+common_link_args = []
 
 message(cc.get_id())
+assert(cc.get_id() == 'msvc', 'This project only support the msvc compiler.')
 if cc.get_id() == 'msvc'
     common_c_args  += ['/MP', '/W2', '/sdl', '/Qspectre', '/guard:cf', '/FC', '/ZH:SHA_256']
     common_link_args += ['/Brepro']
@@ -71,20 +82,66 @@ if cc.has_argument('-Wno-stringop-truncation')
 endif
 add_project_arguments(common_c_args, language:'c')
 
+# Dependencies list
+openvpn_deps = []
 
-openssl_dep = dependency('openssl', version: '>=1.1.1', required: not mbed_enabled and not wolfssl_enabled, method: ['pkg-config', 'cmake'])
+# Crypto dependencies
+if not mbed and not wolfssl
+    openssl_subproject = subproject('openssl')
+    openssl_dep = openssl_subproject.get_variable('openssl_dep')
+    openvpn_deps += [openssl_dep]
+else
+    openssl_dep = disabler()
+endif
 
-mbedtls_dep = dependency('mbedtls', required: mbed_enabled, method: 'pkg-config',
-    include_type: 'system',
-    static: false)
+# Alternative crypto libraries (disabled for now)
+mbedtls_dep = disabler()
+wolfssl_dep = disabler()
 
-wolfssl_dep = dependency('wolfssl', required: wolfssl_enabled, method: 'pkg-config',
-    include_type: 'system',
-    static: false)
+# Compression dependencies
+if get_option('enable_lz4')
+    lz4_subproject = subproject('lz4')
+    lz4_dep = lz4_subproject.get_variable('liblz4_dep')
+    openvpn_deps += [lz4_dep]
+else
+    lz4_dep = disabler()
+endif
 
-lz4_dep = dependency('liblz4', required: get_option('enable_lz4'))
-lzo_dep = dependency('lzo2', required: get_option('enable_lzo'))
-pkcs11_dep = dependency('libpkcs11-helper-1', required: get_option('enable_pkcs11'))
+if get_option('enable_lzo')
+    lzo_subproject = subproject('lzo2')
+    lzo_dep = lzo_subproject.get_variable('lzo2_dep')
+    openvpn_deps += [lzo_dep]
+else
+    lzo_dep = disabler()
+endif
+
+# PKCS11 support (disabled for now)
+# pkcs11_dep = disabler()
+
+# Linux-specific dependencies
+if host_sys == 'linux'
+    libcapng_subproject = subproject('libcap-ng')
+    libcapng_dep = libcapng_subproject.get_variable('libcapng_dep')
+    openvpn_deps += [libcapng_dep]
+    
+    libnl_subproject = subproject('libnl')
+    libnl_dep = libnl_subproject.get_variable('libnl_dep')
+    libnl_genl_dep = libnl_subproject.get_variable('libnl_genl_dep')
+    openvpn_deps += [libnl_dep, libnl_genl_dep]
+else
+    libcapng_dep = disabler()
+    libnl_dep = disabler()
+    libnl_genl_dep = disabler()
+endif
+
+# Testing dependencies
+if get_option('enable_testing')
+    cmocka_subproject = subproject('cmocka')
+    cmocka_dep = cmocka_subproject.get_variable('cmocka_dep')
+    openvpn_deps += [cmocka_dep]
+else
+    cmocka_dep = disabler()
+endif
 
 # Configuration data
 conf_data = configuration_data()
@@ -99,6 +156,12 @@ conf_data.set('DNS_UPDOWN_PATH', get_option('dns_updown_path'))
 if build_windows
   add_project_arguments('-DWIN32_LEAN_AND_MEAN', language: 'c')
   add_project_link_arguments('-lws2_32', '-lwinmm', language: 'c')
+  add_project_arguments(
+    '-D_CRT_SECURE_NO_WARNINGS',
+    '-D_CRT_NONSTDC_NO_DEPRECATE',
+    '-D_WINSOCK_DEPRECATED_NO_WARNINGS',
+    language: 'c'
+  )
 endif
 
 if get_option('use_werror')
@@ -225,6 +288,6 @@ openvpn_sources = files(
 )
 
 executable('openvpn', openvpn_sources,
-  dependencies: [openssl_dep, lz4_dep, lzo_dep, pkcs11_dep, mbedtls_dep, wolfssl_dep],
+  dependencies: openvpn_deps,
   install: true,
 )
