@@ -2,15 +2,18 @@ if not build_windows
   subdir_done()
 endif
 
+windows = import('windows')
+
 openvpnserv_sources = files(
   'common.c',
   'interactive.c',
   'service.c', 'service.h',
   'validate.c', 'validate.h',
   '../tapctl/basic.h',
-  '../openvpn/wfp_block.c', '../openvpn/wfp_block.h',
-  'openvpnserv_resources.rc',
+  '../openvpn/wfp_block.c', '../openvpn/wfp_block.h'
 )
+
+openvpnserv_resources = windows.compile_resources('openvpnserv_resources.rc')
 
 openvpnserv_includes = include_directories(
   '../../include',
@@ -18,7 +21,7 @@ openvpnserv_includes = include_directories(
   '../compat'
 )
 
-executable('openvpnserv', openvpnserv_sources,
+executable('openvpnserv', openvpnserv_sources, openvpnserv_resources,
   include_directories: openvpnserv_includes,
   dependencies: [],
   install: true,
