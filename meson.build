@@ -93,7 +93,7 @@ if cc.get_id() == 'msvc'
       '/Oi',   # Intrinsic expansion  
       '/Gy',   # Function‐level linking  
       '/Zi'    # Full debug info in release  
-    ])
+    ], language: 'c')
   endif
 
   add_project_link_arguments([
