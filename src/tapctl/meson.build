@@ -11,12 +11,16 @@ tapctl_sources = files(
   'tap.c', 'tap.h'
 )
 
-tapctl_resources = windows.compile_resources('tapctl_resources.rc')
-
 tapctl_includes = include_directories(
+  '..',
+  '../..',
   '../../include',
   '../compat'
 )
+
+tapctl_resources = windows.compile_resources('tapctl_resources.rc',
+  include_directories: tapctl_includes,
+  args: ['-DHAVE_CONFIG_H'])
 
 executable('tapctl', tapctl_sources, tapctl_resources,
   include_directories: tapctl_includes,

@@ -26,7 +26,11 @@
 
 #ifdef _WIN32
 #include <winioctl.h>
+// Dunno what's going on here, this varaible is defined to be false in the cmake config file but is never added as a guard
+// So i added the guard here, im pretty sure its for touch devices 
+#ifdef HAVE_TAP_WINDOWS_H
 #include <tap-windows.h>
+#endif
 #include <setupapi.h>
 #include <cfgmgr32.h>
 #endif

@@ -78,7 +78,7 @@ if cc.get_id() == 'msvc'
     add_project_arguments('/WX', language: 'c')
   endif
   add_project_arguments([
-    'std=c11',
+    '-std=c11',
     '/MP',         # Multi‐processor compile  
     '/W2',         # Warning level 2  
     '/sdl',        # SDL security checks  
@@ -113,6 +113,9 @@ if cc.get_id() == 'msvc'
   endif
 endif
 
+# Global compile definition - equivalent to CMake's add_compile_definitions(HAVE_CONFIG_H)
+add_project_arguments('-DHAVE_CONFIG_H', language: 'c')
+
 conf = configuration_data()
 conf.set('PRODUCT_NAME', 'OpenVPN')
 conf.set('PRODUCT_TARNAME', 'openvpn')                 # PRODUCT_TARNAME
@@ -133,6 +136,35 @@ conf.set('TARGET_WIN32', host_sys == 'windows') ## TODO, look at version.h.in
 conf.set('HAVE_CHSIZE', cc.has_header_symbol('io.h', 'chsize'))
 conf.set('HAVE_FCNTL_H', cc.has_header('fcntl.h'))
 
+# Header detection (equivalent to CMake's check_include_files)
+conf.set('HAVE_UNISTD_H', cc.has_header('unistd.h'))
+conf.set('HAVE_GRP_H', cc.has_header('grp.h'))
+conf.set('HAVE_LIBGEN_H', cc.has_header('libgen.h'))
+conf.set('HAVE_PWD_H', cc.has_header('pwd.h'))
+conf.set('HAVE_SYS_EPOLL_H', cc.has_header('sys/epoll.h'))
+conf.set('HAVE_SYSLOG_H', cc.has_header('syslog.h'))
+conf.set('HAVE_SYS_MMAN_H', cc.has_header('sys/mman.h'))
+conf.set('HAVE_SYS_SOCKET_H', cc.has_header('sys/socket.h'))
+conf.set('HAVE_SYS_TIME_H', cc.has_header('sys/time.h'))
+conf.set('HAVE_NETINET_IN_H', cc.has_header('netinet/in.h'))
+conf.set('HAVE_ARPA_INET_H', cc.has_header('arpa/inet.h'))
+conf.set('HAVE_DLFCN_H', cc.has_header('dlfcn.h'))
+conf.set('HAVE_DMALLOC_H', cc.has_header('dmalloc.h'))
+conf.set('HAVE_ERR_H', cc.has_header('err.h'))
+conf.set('HAVE_LINUX_IF_TUN_H', cc.has_header('linux/if_tun.h'))
+conf.set('HAVE_LINUX_SOCKIOS_H', cc.has_header('linux/sockios.h'))
+conf.set('HAVE_NETDB_H', cc.has_header('netdb.h'))
+conf.set('HAVE_NET_IF_H', cc.has_header('net/if.h'))
+conf.set('HAVE_NET_IF_TUN_H', cc.has_header('net/if_tun.h'))
+conf.set('HAVE_POLL_H', cc.has_header('poll.h'))
+conf.set('HAVE_RESOLV_H', cc.has_header('resolv.h'))
+conf.set('HAVE_SYS_IOCTL_H', cc.has_header('sys/ioctl.h'))
+conf.set('HAVE_SYS_INOTIFY_H', cc.has_header('sys/inotify.h'))
+conf.set('HAVE_SYS_UIO_H', cc.has_header('sys/uio.h'))
+conf.set('HAVE_SYS_UN_H', cc.has_header('sys/un.h'))
+conf.set('HAVE_SYS_WAIT_H', cc.has_header('sys/wait.h'))
+conf.set('HAVE_NETINET_IP_H', cc.has_header('netinet/ip.h'))
+conf.set('HAVE_MBEDTLS_PSA_CRYPTO_H', cc.has_header('psa/crypto.h'))
 
 conf.set('ROUTE_PATH', find_program('route', required: false).found()? find_program('route', required: false).full_path(): 'ROUTE_PATH-NOTFOUND')
 
@@ -186,6 +218,11 @@ inc_dirs = include_directories('.', 'src/compat', 'include')
 
 #375 - 378: I'm not sure if this is needed, maybe add later, it just makes the version header file
 conf.set('HAVE_CONFIG_VERSION_H', true)
+# This is goofy af, basically the variables on the right are the ones gotten from the m4 file, but they are also stored in conf here but it shouldn't be an issue unless we have collisions
+conf.set('OPENVPN_VERSION_RESOURCE', conf.get('VERSION_RESOURCE'))
+conf.set('OPENVPN_VERSION_MAJOR', conf.get('PRODUCT_VERSION_MAJOR'))
+conf.set('OPENVPN_VERSION_MINOR', conf.get('PRODUCT_VERSION_MINOR'))  
+conf.set('OPENVPN_VERSION_PATCH', conf.get('PRODUCT_VERSION_PATCH'))
 
 configure_file(
   input : 'version.h.in',
@@ -193,10 +230,18 @@ configure_file(
   configuration : conf
 )
 
+#idrk whats up here
+configure_file(
+  input : 'config.h.meson.in',
+  output : 'config.h', 
+  configuration : conf
+)
 # I'm not sure what's up with this, it seems to compile adding it to the source_files but doesn't do it for subdirs so i do this for consistency
 if build_windows
   windows = import('windows')
-  openvpn_resources = windows.compile_resources('src/openvpn/openvpn_win32_resources.rc')
+  openvpn_resources = windows.compile_resources('src/openvpn/openvpn_win32_resources.rc',
+  include_directories: inc_dirs,
+  args: ['-DHAVE_CONFIG_H'])
 else
   openvpn_resources = []
 endif

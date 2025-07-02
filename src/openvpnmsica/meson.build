@@ -4,6 +4,10 @@ endif
 
 windows = import('windows')
 
+# Debug: Print current paths
+message('openvpnmsica current source dir: ' + meson.current_source_dir())
+message('openvpnmsica current build dir: ' + meson.current_build_dir())
+
 openvpnmsica_sources = files(
   'dllmain.c',
   'msiex.c', 'msiex.h',
@@ -14,13 +18,16 @@ openvpnmsica_sources = files(
   '../tapctl/tap.c', '../tapctl/tap.h'
 )
 
-openvpnmsica_resources = windows.compile_resources('openvpnmsica_resources.rc')
-
 openvpnmsica_includes = include_directories(
+  '..',
   '../..',
   '../../include',
   '../compat'
 )
+
+openvpnmsica_resources = windows.compile_resources('openvpnmsica_resources.rc',
+  include_directories: openvpnmsica_includes,
+  args: ['-DHAVE_CONFIG_H'])
 
 openvpnmsica_c_args = ['-D_UNICODE', '-UNTDDI_VERSION', '-D_WIN32_WINNT=_WIN32_WINNT_VISTA']
 openvpnmsica_link_args = []

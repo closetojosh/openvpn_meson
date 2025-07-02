@@ -13,13 +13,17 @@ openvpnserv_sources = files(
   '../openvpn/wfp_block.c', '../openvpn/wfp_block.h'
 )
 
-openvpnserv_resources = windows.compile_resources('openvpnserv_resources.rc')
-
 openvpnserv_includes = include_directories(
+  '..',
+  '../..',
   '../../include',
   '../openvpn',
   '../compat'
 )
+
+openvpnserv_resources = windows.compile_resources('openvpnserv_resources.rc',
+  include_directories: openvpnserv_includes,
+  args: ['-DHAVE_CONFIG_H'])
 
 executable('openvpnserv', openvpnserv_sources, openvpnserv_resources,
   include_directories: openvpnserv_includes,
