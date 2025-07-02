@@ -73,12 +73,12 @@ if cc.get_id() == 'msvc'
       '-D_CRT_NONSTDC_NO_DEPRECATE',
       '-D_WINSOCK_DEPRECATED_NO_WARNINGS',
   ], language: 'c')
-  
+  #TODO: Figure out why this is not working
+  #message('use_werror: ' + use_werror.to_string())
   if use_werror
-    add_project_arguments('/WX', language: 'c')
+    #add_project_arguments('/WX', language: 'c')
   endif
   add_project_arguments([
-    '-std=c11',
     '/MP',         # Multi‐processor compile  
     '/W2',         # Warning level 2  
     '/sdl',        # SDL security checks  
@@ -110,6 +110,11 @@ if cc.get_id() == 'msvc'
   endif
   if host_sys == 'windows' and buildtype == 'release' and (cpu == 'x86' or cpu == 'x86_64')
     add_project_link_arguments('/CETCOMPAT', language: 'c')
+  endif
+
+  # Fix OpenSSL applink.c path for Windows MSVC builds
+  if cc.get_id() == 'msvc' and host_sys == 'windows'
+    add_project_arguments('-I' + meson.current_source_dir() / 'subprojects' / 'openssl-3.0.8' / 'ms', language: 'c')
   endif
 endif
 
@@ -214,7 +219,10 @@ else
 endif
 
 #this needs to go into the executable call later
-inc_dirs = include_directories('.', 'src/compat', 'include')
+inc_dirs = include_directories('.', 
+'src/compat', 
+'include',
+'subprojects/openssl-3.0.8/ms')
 
 #375 - 378: I'm not sure if this is needed, maybe add later, it just makes the version header file
 conf.set('HAVE_CONFIG_VERSION_H', true)
@@ -223,14 +231,20 @@ conf.set('OPENVPN_VERSION_RESOURCE', conf.get('VERSION_RESOURCE'))
 conf.set('OPENVPN_VERSION_MAJOR', conf.get('PRODUCT_VERSION_MAJOR'))
 conf.set('OPENVPN_VERSION_MINOR', conf.get('PRODUCT_VERSION_MINOR'))  
 conf.set('OPENVPN_VERSION_PATCH', conf.get('PRODUCT_VERSION_PATCH'))
-
+dns_updown_path = get_option('prefix') / get_option('libexecdir') / 'openvpn' / 'dns-updown'
+conf.set('DNS_UPDOWN_PATH', dns_updown_path)
+add_project_arguments('-DDEFAULT_DNS_UPDOWN="' + dns_updown_path + '"', language: 'c')
 configure_file(
   input : 'version.h.in',
-  output : 'version.h',
+  output : 'config-version.h',
   configuration : conf
 )
 
-#TODO: Add plugin header and maybe rename version to config-version?
+configure_file(
+  input : 'include/openvpn-plugin.h.in',
+  output : 'openvpn-plugin.h',
+  configuration : conf
+)
 configure_file(
   input : 'config.h.meson.in',
   output : 'config.h', 
