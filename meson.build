@@ -230,7 +230,7 @@ configure_file(
   configuration : conf
 )
 
-#idrk whats up here
+#TODO: Add plugin header and maybe rename version to config-version?
 configure_file(
   input : 'config.h.meson.in',
   output : 'config.h', 
