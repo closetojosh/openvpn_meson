@@ -185,11 +185,12 @@ endif
 # if enable_pkcs11
 #   openvpn_dep += dependency('libpkcs11-helper-1', required: true)
 # endif
-if mbed
-  error('mbed is not supported yet')
-elif wolfssl
-  error('wolfssl is not supported yet')
-else
+# Commented as well because of options issue
+# if mbed
+#   error('mbed is not supported yet')
+# elif wolfssl
+#   error('wolfssl is not supported yet')
+# else
   openvpn_dep += dependency('openssl', required: true)
   #need to add the libraries for windows only for openssl?
   if cc.get_id() == 'msvc'
@@ -206,7 +207,7 @@ else
       cc.find_library('bcrypt')
     ]
   endif
-endif
+# endif
 #We can skip 347 - 357 cause adding the deps to array and passing it in makes it link
 if mbed
   conf.set('ENABLE_CRYPTO_MBEDTLS', true)
