@@ -1,18 +1,3 @@
-// Basically a copy of cmake but replace cmakedefine with mesondefine
-//I'm pretty sure this is tap controls stuff but idek anymore
-#define ADAPTER_KEY "SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}"
-#define NETWORK_CONNECTIONS_KEY "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}"
-#define USERMODEDEVICEDIR "\\\\.\\Global\\"
-#define TAP_WIN_SUFFIX ".tap"
-#define TAP_WIN_IOCTL_GET_VERSION       1
-#define TAP_WIN_IOCTL_GET_MTU          2  
-#define TAP_WIN_IOCTL_SET_MEDIA_STATUS 6
-#define TAP_WIN_IOCTL_CONFIG_TUN       10
-#define TAP_WIN_IOCTL_CONFIG_POINT_TO_POINT 5
-#define TAP_WIN_IOCTL_CONFIG_DHCP_MASQ 7
-#define TAP_WIN_IOCTL_CONFIG_DHCP_SET_OPT 8
-#define TAP_WIN_IOCTL_GET_INFO         4
-#define TAP_WIN_IOCTL_GET_LOG_LINE     3
 /* Configuration settings */
 #define CONFIGURE_DEFINES "N/A"
 
