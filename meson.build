@@ -112,10 +112,6 @@ if cc.get_id() == 'msvc'
     add_project_link_arguments('/CETCOMPAT', language: 'c')
   endif
 
-  # Fix OpenSSL applink.c path for Windows MSVC builds
-  if cc.get_id() == 'msvc' and host_sys == 'windows'
-    add_project_arguments('-I' + meson.current_source_dir() / 'subprojects' / 'openssl-3.0.8' / 'ms', language: 'c')
-  endif
 endif
 
 # Global compile definition - equivalent to CMake's add_compile_definitions(HAVE_CONFIG_H)
@@ -222,8 +218,7 @@ endif
 #this needs to go into the executable call later
 inc_dirs = include_directories('.', 
 'src/compat', 
-'include',
-'subprojects/openssl-3.0.8/ms')
+'include')
 
 #375 - 378: I'm not sure if this is needed, maybe add later, it just makes the version header file
 conf.set('HAVE_CONFIG_VERSION_H', true)
