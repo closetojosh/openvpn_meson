@@ -1,5 +1,5 @@
 #Meson port of CMakeLists.txt
-project('openvpn', 'c', meson_version: '>=1.8.2')
+project('openvpn', 'c', version: '2.7.0_alpha2', meson_version: '>=1.8.2')
 skip = true
 
 ########################
