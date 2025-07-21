@@ -132,7 +132,7 @@ conf.set('TAP_WIN_MIN_MINOR', '9')                            # PRODUCT_TAP_WIN_
 # linux specific 
 conf.set('ENABLE_DCO', host_sys == 'windows')
 conf.set('PATH_SEPARATOR', '\\\\')
-conf.set('TARGET_WIN32', host_sys == 'windows') ## TODO, look at version.h.in
+conf.set('TARGET_WIN32', host_sys == 'windows')
 
 conf.set('HAVE_CHSIZE', cc.has_header_symbol('io.h', 'chsize'))
 conf.set('HAVE_FCNTL_H', cc.has_header('fcntl.h'))
@@ -176,17 +176,12 @@ endif
 if enable_lzo
   openvpn_dep += dependency('lzo2', required: true)
 endif
-# I DON"T KNOW HOW TO GE TTHIS TO WORK
-# I AM NOW at line 300
-# if enable_pkcs11
-#   openvpn_dep += dependency('libpkcs11-helper-1', required: true)
-# endif
-# Commented as well because of options issue
-# if mbed
-#   error('mbed is not supported yet')
-# elif wolfssl
-#   error('wolfssl is not supported yet')
-# else
+
+if mbed
+  error('mbed is not supported yet')
+elif wolfssl
+  error('wolfssl is not supported yet')
+else
   openvpn_dep += dependency('openssl', required: true)
   #need to add the libraries for windows only for openssl?
   if cc.get_id() == 'msvc'
@@ -203,7 +198,7 @@ endif
       cc.find_library('bcrypt')
     ]
   endif
-# endif
+endif
 #We can skip 347 - 357 cause adding the deps to array and passing it in makes it link
 if mbed
   conf.set('ENABLE_CRYPTO_MBEDTLS', true)
@@ -216,7 +211,7 @@ else
 endif
 
 #this needs to go into the executable call later
-inc_dirs = include_directories('.', 
+inc_dirs = include_directories(
 'src/compat', 
 'include')
 
@@ -227,14 +222,7 @@ conf.set('OPENVPN_VERSION_RESOURCE', conf.get('VERSION_RESOURCE'))
 conf.set('OPENVPN_VERSION_MAJOR', conf.get('PRODUCT_VERSION_MAJOR'))
 conf.set('OPENVPN_VERSION_MINOR', conf.get('PRODUCT_VERSION_MINOR'))  
 conf.set('OPENVPN_VERSION_PATCH', conf.get('PRODUCT_VERSION_PATCH'))
-dns_updown_path = get_option('prefix') / get_option('libexecdir') / 'openvpn' / 'dns-updown'
-conf.set('DNS_UPDOWN_PATH', dns_updown_path)
-add_project_arguments('-DDEFAULT_DNS_UPDOWN="' + dns_updown_path + '"', language: 'c')
-configure_file(
-  input : 'version.h.in',
-  output : 'config-version.h',
-  configuration : conf
-)
+add_project_arguments('-DDEFAULT_DNS_UPDOWN="@0@"'.format(dns_updown_path), language: 'c')
 
 configure_file(
   input : 'include/openvpn-plugin.h.in',
