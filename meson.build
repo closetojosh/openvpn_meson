@@ -47,7 +47,7 @@ enable_dns_updown = get_option('enable_dns_updown')
 dns_updown_path   = get_option('dns_updown_path')
 prefix            = get_option('prefix')
 buildtype = get_option('buildtype')
-
+enable_testing = get_option('enable_testing')
 
 if dns_updown_path == ''
   dns_updown_path = join_paths(prefix, 'libexec', 'openvpn', 'dns-updown')
@@ -393,3 +393,232 @@ executable('openvpn', source_files, openvpn_resources,
   link_args: openvpn_link_args 
 )
 #testing later
+if enable_testing
+  openvpn_dep += dependency('cmocka', required: true)
+  openvpn_inc = include_directories('src/openvpn','src/compat','include')
+  unit_tests = [
+    'test_auth_token', 'test_buffer', 'test_crypto',  'test_misc',
+    'test_ncp',        'test_packet_id', 'test_pkt',     'test_provider',
+    'test_ssl',        'test_user_pass'
+  ]
+  has_wrap = cc.has_link_argument('-Wl,--wrap=parse_line')
+  if cc.get_id() != 'msvc' and has_wrap
+    unit_tests += ['test_argv', 'test_tls_crypt']
+  endif
+  if host_sys == 'windows'
+    unit_tests += ['test_cryptoapi']
+  endif
+  if host_sys == 'linux'
+    unit_tests += ['test_networking']
+  endif
+  tests_dir = meson.project_source_root() / 'tests/unit_tests/openvpn'
+  foreach test_name : unit_tests
+    srcs = [
+      'tests/unit_tests/openvpn' / (test_name + '.c'),
+      'tests/unit_tests/openvpn' / 'mock_msg.c',
+      'tests/unit_tests/openvpn' / 'mock_msg.h',
+      'src/openvpn/platform.c',
+      'src/openvpn/win32-util.c',
+      'src/compat/compat-gettimeofday.c'
+    ]
+    extra_link_args = []
+    c_args = ['-DUNIT_TEST_SOURCEDIR="' + tests_dir + '"']
+    if test_name != 'test_buffer'
+      srcs += 'src/openvpn/buffer.c'
+    endif
+
+
+    if test_name == 'test_auth_token'
+      srcs += [
+        'src/openvpn/base64.c',
+        'src/openvpn/crypto_epoch.c',
+        'src/openvpn/crypto_mbedtls.c',
+        'src/openvpn/crypto_openssl.c',
+        'src/openvpn/crypto.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/packet_id.c'
+      ]
+    elif test_name == 'test_buffer'
+      srcs += 'tests/unit_tests/openvpn/mock_get_random.c'
+    elif test_name == 'test_crypto'
+      srcs += [
+        'src/openvpn/crypto_mbedtls.c',
+        'src/openvpn/crypto_openssl.c',
+        'src/openvpn/crypto_epoch.c',
+        'src/openvpn/crypto.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/packet_id.c',
+        'src/openvpn/mtu.c',
+        'src/openvpn/mss.c'
+      ]
+    elif test_name == 'test_ssl'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_management.c',
+        'tests/unit_tests/openvpn/mock_ssl_dependencies.c',
+        'tests/unit_tests/openvpn/mock_win32_execve.c',
+        'src/openvpn/argv.c',
+        'src/openvpn/base64.c',
+        'src/openvpn/crypto_epoch.c',
+        'src/openvpn/crypto_mbedtls.c',
+        'src/openvpn/crypto_openssl.c',
+        'src/openvpn/crypto.c',
+        'src/openvpn/cryptoapi.c',
+        'src/openvpn/env_set.c',
+        'src/openvpn/mss.c',
+        'src/openvpn/mtu.c',
+        'src/openvpn/options_util.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/packet_id.c',
+        'src/openvpn/run_command.c',
+        'src/openvpn/ssl_mbedtls.c',
+        'src/openvpn/ssl_openssl.c',
+        'src/openvpn/ssl_util.c',
+        'src/openvpn/ssl_verify_mbedtls.c',
+        'src/openvpn/ssl_verify_openssl.c',
+        'src/openvpn/xkey_helper.c',
+        'src/openvpn/xkey_provider.c'
+      ]
+    elif test_name == 'test_misc'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_get_random.c',
+        'src/openvpn/options_util.c',
+        'src/openvpn/ssl_util.c',
+        'src/openvpn/list.c',
+      ]
+    elif test_name == 'test_ncp'
+      srcs += [
+        'src/openvpn/crypto_epoch.c',
+        'src/openvpn/crypto_mbedtls.c',
+        'src/openvpn/crypto_openssl.c',
+        'src/openvpn/crypto.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/packet_id.c',
+        'src/openvpn/ssl_util.c',
+        'src/compat/compat-strsep.c'
+      ]
+    elif test_name == 'test_packet_id'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_get_random.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/packet_id.c',
+        'src/openvpn/reliable.c',
+        'src/openvpn/session_id.c'
+      ]
+
+    elif test_name == 'test_pkt'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_win32_execve.c',
+        'src/openvpn/argv.c',
+        'src/openvpn/base64.c',
+        'src/openvpn/crypto_epoch.c',
+        'src/openvpn/crypto_mbedtls.c',
+        'src/openvpn/crypto_openssl.c',
+        'src/openvpn/crypto.c',
+        'src/openvpn/env_set.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/packet_id.c',
+        'src/openvpn/reliable.c',
+        'src/openvpn/run_command.c',
+        'src/openvpn/session_id.c',
+        'src/openvpn/ssl_pkt.c',
+        'src/openvpn/tls_crypt.c'
+      ]
+    elif test_name == 'test_provider'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_get_random.c',
+        'src/openvpn/xkey_provider.c',
+        'src/openvpn/xkey_helper.c',
+        'src/openvpn/base64.c'
+      ]
+    elif test_name == 'test_user_pass'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_get_random.c',
+        'tests/unit_tests/openvpn/mock_win32_execve.c',
+        'src/openvpn/base64.c',
+        'src/openvpn/console.c',
+        'src/openvpn/env_set.c',
+        'src/openvpn/run_command.c'
+      ]
+    elif test_name == 'test_argv'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_get_random.c',
+        'src/openvpn/argv.c'
+      ]
+      extra_link_args += ['-Wl,--wrap=parse_line']
+    elif test_name == 'test_cryptoapi'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_get_random.c',
+        'tests/unit_tests/openvpn/cert_data.h',
+        'tests/unit_tests/openvpn/pkey_test_utils.c',
+        'src/openvpn/xkey_provider.c',
+        'src/openvpn/xkey_helper.c',
+        'src/openvpn/base64.c'
+      ]
+    elif test_name == 'test_networking'
+      srcs += [
+        'src/openvpn/networking_sitnl.c',
+        'src/openvpn/crypto_epoch.c',
+        'src/openvpn/crypto_mbedtls.c',
+        'src/openvpn/crypto_openssl.c',
+        'src/openvpn/crypto.c',
+        'src/openvpn/crypto_epoch.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/packet_id.c'
+      ]
+      extra_link_args += ['-Wl,--wrap=parse_line']
+      c_args += ['-UNDEBUG']
+    elif test_name == 'test_tls_crypt'
+      srcs += [
+      'tests/unit_tests/openvpn/mock_win32_execve.c',
+      'src/openvpn/argv.c',
+      'src/openvpn/base64.c',
+      'src/openvpn/crypto_epoch.c',
+      'src/openvpn/crypto_mbedtls.c',
+      'src/openvpn/crypto_openssl.c',
+      'src/openvpn/crypto.c',
+      'src/openvpn/env_set.c',
+      'src/openvpn/otime.c',
+      'src/openvpn/packet_id.c',
+      'src/openvpn/run_command.c'
+      ]
+      extra_link_args += [
+        '-Wl,--wrap=parse_line',
+        '-Wl,--wrap=buffer_read_from_file',
+        '-Wl,--wrap=buffer_write_file',
+        '-Wl,--wrap=rand_bytes'
+      ]
+    elif test_name == 'test_pkcs11'
+      srcs += [
+        'tests/unit_tests/openvpn/mock_get_random.c',
+        'tests/unit_tests/openvpn/pkey_test_utils.c',
+        'src/openvpn/argv.c',
+        'src/openvpn/base64.c',
+        'src/openvpn/env_set.c',
+        'src/openvpn/otime.c',
+        'src/openvpn/pkcs11.c',
+        'src/openvpn/pkcs11_openssl.c',
+        'src/openvpn/run_command.c',
+        'src/openvpn/xkey_helper.c',
+        'src/openvpn/xkey_provider.c'
+      ]
+      c_args += [
+        '-DP11TOOL_PATH=\\"'      + p11tool.full_path()      + '\\"',
+        '-DSOFTHSM2_MODULE_PATH=\\"' + softhsm2_mod.full_path() + '\\"',
+        '-DSOFTHSM2_UTIL_PATH=\\"'   + softhsm2_util.full_path() + '\\"'
+      ]
+
+    endif
+    exe = executable(
+      test_name,
+      srcs,
+      include_directories : openvpn_inc,
+      dependencies         : openvpn_dep,
+      link_args            : extra_link_args,
+      c_args               : c_args
+    )
+    test(test_name, exe,
+      env : ['srcdir=' + tests_dir]
+    )
+  endforeach
+
+endif

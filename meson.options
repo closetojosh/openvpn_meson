@@ -101,6 +101,6 @@ option(
 option(
     'enable_testing', 
     type: 'boolean', 
-    value: false, 
+    value: true, 
     description: 'Enable building unit tests'
 ) 
