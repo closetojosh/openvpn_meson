@@ -216,6 +216,15 @@ inc_dirs = include_directories(
 'include')
 
 #375 - 378: I'm not sure if this is needed, maybe add later, it just makes the version header file
+python3 = find_program('python3')
+config_version_h = custom_target('config-version.h',
+  output: ['config-version.h'],
+  input: [meson.project_source_root() / 'contrib/cmake/git-version.py'],
+  command: [python3, '@INPUT@'],
+  build_by_default: true,
+  build_always_stale: true
+)
+
 conf.set('HAVE_CONFIG_VERSION_H', true)
 # This is goofy af, basically the variables on the right are the ones gotten from the m4 file, but they are also stored in conf here but it shouldn't be an issue unless we have collisions
 conf.set('OPENVPN_VERSION_RESOURCE', conf.get('VERSION_RESOURCE'))
@@ -252,7 +261,9 @@ subdir('src/openvpnmsica')
 subdir('src/openvpnserv') 
 subdir('src/tapctl')
 #We ca remove all the .h files with correpsonding .c files as meson finds them automatically
-source_files = files(
+source_files = []
+source_files += config_version_h
+source_files += files(
 'src/compat/compat-basename.c',
 'src/compat/compat-daemon.c',
 'src/compat/compat-dirname.c',
