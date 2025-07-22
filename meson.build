@@ -171,10 +171,10 @@ conf.set('ROUTE_PATH', find_program('route', required: false).found()? find_prog
 
 openvpn_dep = []
 if enable_lz4
-  openvpn_dep += dependency('liblz4', required: true)
+  openvpn_dep += dependency('liblz4', required: true, static: true)
 endif
 if enable_lzo
-  openvpn_dep += dependency('lzo2', required: true)
+  openvpn_dep += dependency('lzo2', required: true, static: true)
 endif
 
 if mbed
@@ -182,7 +182,7 @@ if mbed
 elif wolfssl
   error('wolfssl is not supported yet')
 else
-  openvpn_dep += dependency('openssl', required: true)
+  openvpn_dep += dependency('openssl', required: true,static:true)
   #need to add the libraries for windows only for openssl?
   if cc.get_id() == 'msvc'
     openvpn_dep += [
@@ -394,7 +394,7 @@ executable('openvpn', source_files, openvpn_resources,
 )
 #testing later
 if enable_testing
-  openvpn_dep += dependency('cmocka', required: true)
+  openvpn_dep += dependency('cmocka', required: true, static: true)
   openvpn_inc = include_directories('src/openvpn','src/compat','include')
   unit_tests = [
     'test_auth_token', 'test_buffer', 'test_crypto',  'test_misc',
