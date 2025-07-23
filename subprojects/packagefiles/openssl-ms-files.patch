@@ -1,3 +1,4 @@
+--- /dev/null
 +++ b/include/openssl/applink.c
 @@ -0,0 +1,143 @@
 +/*
