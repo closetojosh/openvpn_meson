@@ -1,13 +1,9 @@
-To 
-
-
-
 # Requirement:
 - Ability to run Windows Docker containers (normally for people with Windows 10 Pro)
 
 # How to setup/compile/unit test:
 - `git clone https://github.com/OpenVPN/openvpn`
-- `cd` to reposfritory
+- `cd` to repository
 - Run `docker build -t openvpn-meson-msvc .`
 - Run `docker run -it --rm openvpn-meson-msvc`
 
